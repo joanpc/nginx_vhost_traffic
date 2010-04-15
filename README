@@ -1,0 +1,9 @@
+Nginx Vhost traffic monitoring munin plugin
+
+You need to log all the vhost in the same access file
+
+Logtail is required
+
+Filtering and accounting is done by awk so it has to be efficient with large logfiles
+
+Check the source for more info
