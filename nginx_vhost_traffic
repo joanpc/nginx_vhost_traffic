@@ -68,7 +68,7 @@ esac
 
 export BPARAM
 export VHOSTS
-export AGREGATE
+export AGGREGATE
 
 # Awk Script
 $LOGTAIL ${ACCESS_LOG} $STATEFILE | awk 'BEGIN { 
@@ -85,7 +85,7 @@ for (host in hosts) {
 END { 
 		for (host in cn) {
 		
-		if (ENVIRON["AGREGATE"]) {	
+		if (ENVIRON["AGGREGATE"]) {	
 		if (host in track) {
 			res[vhost] += cn[host]	
 		} else rest+=cn[host]
