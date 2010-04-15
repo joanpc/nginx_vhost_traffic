@@ -31,8 +31,8 @@
 # see http://github.com/joanpc/nginix_vhost_traffic
 #
 # inspired in postfix_filtered_awk 
-# (c) Joan Perez Cauhe 
-
+# Copyright (c) 2010, Joan Perez i Cauhe
+#
 
 LOGDIR=${logdir:-/var/log/nginx}
 ACCESS_LOG=$LOGDIR/${logfile:-access.log}
@@ -85,9 +85,11 @@ for (host in hosts) {
 END { 
 		for (host in cn) {
 		
-		#if (host in track) {
-		#	print "vhost" track[host]".value " cn[host]
-		#} else rest1+=cn[host]
+		if (ENVIRON["AGREGATE"]) {	
+		if (host in track) {
+			res[vhost] += cn[host]	
+		} else rest+=cn[host]
+		} else {
 		found = 0
 			for (vhost in track) {
 				if (index(host, vhost)) {
@@ -98,7 +100,7 @@ END {
 			}
 		if (! found) rest+=cn[host]	
 		}
-		
+		}
 		for (vhost in track) print "vhost" track[vhost] ".value " res[vhost]+0
 		print "rest.value " rest + 0
 }'
