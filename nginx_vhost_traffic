@@ -85,7 +85,7 @@ for (host in hosts) {
 END { 
 		for (host in cn) {
 		
-		if (ENVIRON["AGGREGATE"]) {	
+		if (! ENVIRON["AGGREGATE"]) {	
 		if (host in track) {
 			res[vhost] += cn[host]	
 		} else rest+=cn[host]
