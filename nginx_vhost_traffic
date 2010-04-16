@@ -10,20 +10,19 @@
 # [nginx_vhost_traffic]
 #
 # Virtual host list
-# env.vhosts = "example.com example.net example.org"
+# env.vhosts "example.com example.net example.org"
 # 
 # Log path
 # env.logdir = /var/log/nginx
 # env.flogfile = access.log 
 #
-# Position of the $bytes_sent in the log file
-# env.bparam = 11
+# Position of the $bytes_sent in the access.log file
+# env.bparam 11
 #
-# TODO: Enabled by default
 # Aggregate subdomains
-# ex: example.com will match www.example.com, webmail.example.com *example.com 
+# ex: example.com will match www.example.com, webmail.example.com and *example.com 
 # BUG: will also match also www.bad-example.com
-# env.aggregate = -1 #disabled 
+# env.aggregate true #change to false to disable aggregation 
 #
 # To report bugs, improvements or get updates
 # see http://github.com/joanpc/nginix_vhost_traffic
@@ -36,7 +35,7 @@ ACCESS_LOG=$LOGDIR/${logfile:-access.log}
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=/var/lib/munin/plugin-state/nginx_vhost_traffic.state
 VHOSTS=${vhosts:-`hostname`}
-AGGREGATE=${aggregate:-1}
+AGGREGATE=${aggregate:true}
 
 BPARAM=${bparam:-11}
 
