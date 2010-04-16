@@ -1,9 +1,54 @@
-Nginx Vhost traffic monitoring munin plugin
+Nginx Virtual Host traffic monitoring munin plugin
 
-You need to log all the vhost in the same access file
+You need to log all the Virtual Hosts in the same access file
 
-Logtail is required
+Filtering and accounting is done by logtail and awk so it has to be efficient
+with large logfiles and busy sites.
 
-Filtering and accounting is done by awk so it has to be efficient with large logfiles
+------------
+INSTALLATION
+------------
 
-Check the source for more info
+Install logtail
+http://www.fourmilab.ch/webtools/logtail/
+(Avaliable in most distributions)
+
+Add the following lines in your nginx.conf
+
+log_format        main '"$remote_addr" $host [$time_local] '
+                  '"$request" $status $body_bytes_sent '
+                  '$request_length $bytes_sent "$http_referer" '
+                  '"$http_user_agent" $request_time "$gzip_ratio"';
+
+
+Configure in your munin-node config file:
+
+/etc/munin/plugin-conf.d/munin-conf in Debian
+
+[nginx_vhost_traffic]
+group adm	#Set a group with read access to the access log
+
+# List the virtual hosts to monitor
+env.vhosts example.com example.net example.edu
+
+# Define the path to the access log
+env.logdir = /var/log/nginx
+env.flogfile = access.log
+
+# Aggregate subdomains
+# ex: example.com will match www.example.com, webmail.example.com *.example.com
+env.aggregate true #change to false to disable aggregation
+
+
+Restart munin-host:
+on debian:
+/etc/init.d/munin-host restart
+
+
+Wait 5 minutes for graphs
+
+---
+Check the source code for more info
+---
+
+Copyright (c) 2010, Joan Perez i Cauhe
