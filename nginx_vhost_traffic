@@ -2,11 +2,9 @@
 #
 # Script for monitoring nginx Virtual host output traffic
 # 
-# 
 # Requierements: logtail awk
 # one unique access log file with $bytes_sent value for more accuracy
 # check http://wiki.nginx.org/NginxHttpLogModule
-# 
 #
 # Configuration Options (all options have defauts)
 # [nginx_vhost_traffic]
@@ -32,18 +30,15 @@
 #
 # inspired in postfix_filtered_awk 
 # Copyright (c) 2010, Joan Perez i Cauhe
-#
 
 LOGDIR=${logdir:-/var/log/nginx}
 ACCESS_LOG=$LOGDIR/${logfile:-access.log}
 LOGTAIL=${logtail:-`which logtail`}
 STATEFILE=/var/lib/munin/plugin-state/nginx_vhost_traffic.state
 VHOSTS=${vhosts:-`hostname`}
-AGGREGATE=${aggregate:1}
+AGGREGATE=${aggregate:-1}
 
 BPARAM=${bparam:-11}
-
-
 
 case $1 in
    config)
@@ -71,26 +66,19 @@ export VHOSTS
 export AGGREGATE
 
 # Awk Script
-$LOGTAIL ${ACCESS_LOG} $STATEFILE | awk 'BEGIN { 
+$LOGTAIL ${ACCESS_LOG} $STATEFILE | awk '
 
+BEGIN { 
 split(ENVIRON["VHOSTS"], hosts)
-for (host in hosts) { 
-	track[hosts[host]] = host
-}
-
+for (host in hosts) { track[hosts[host]] = host}
 }        
-	{
+{
 		cn[$2]+=ENVIRON["BPARAM"]
-	}
+}
 END { 
-		for (host in cn) {
-		
-		if (! ENVIRON["AGGREGATE"]) {	
-		if (host in track) {
-			res[vhost] += cn[host]	
-		} else rest+=cn[host]
-		} else {
-		found = 0
+		for (host in cn) {		
+		if (match(ENVIRON["AGGREGATE"], "true")) {	
+			found = 0
 			for (vhost in track) {
 				if (index(host, vhost)) {
 				res[vhost] += cn[host]
@@ -98,9 +86,14 @@ END {
 				break
 				}
 			}
-		if (! found) rest+=cn[host]	
+			if (! found) rest+=cn[host]
+		} else {
+			if (host in track) {
+				res[host] += cn[host]	
+			} else rest+=cn[host]
 		}
 		}
+		print "agregate: " ENVIRON["AGGREGATE"]
 		for (vhost in track) print "vhost" track[vhost] ".value " res[vhost]+0
 		print "rest.value " rest + 0
 }'
