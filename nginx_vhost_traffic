@@ -70,7 +70,7 @@ export VHOSTS
 export AGGREGATE
 
 # Awk Script
-$LOGTAIL ${ACCESS_LOG} $STATEFILE | awk '
+$LOGTAIL ${ACCESS_LOG} -o $STATEFILE | awk '
 
 BEGIN { 
 split(ENVIRON["VHOSTS"], hosts)

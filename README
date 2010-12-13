@@ -10,7 +10,7 @@ INSTALLATION
 ------------
 
 Install logtail
-http://www.fourmilab.ch/webtools/logtail/
+http://www.logcheck.org/download.html
 (Avaliable in most distributions)
 
 Add the following lines in your nginx.conf
