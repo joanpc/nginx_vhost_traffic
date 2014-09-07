@@ -1,0 +1,147 @@
+#!/bin/bash
+#
+# Script for monitoring nginx Virtual host output traffic
+#
+# Multigraph version; will graph a dedicated graph for each host.
+# 
+# Requierements: logtail awk
+# one unique access log file with $bytes_sent value for more accuracy
+# check http://wiki.nginx.org/NginxHttpLogModule
+#
+# Configuration Options (all options have defauts)
+# [nginx_vhost_traffic]
+#
+# Virtual host list
+# env.vhosts "example.com example.net example.org"
+# 
+# Log path
+# env.logdir = /var/log/nginx
+# env.logfile = access.log 
+#
+# Position of the $bytes_sent in the access.log file
+# env.bparam 11
+#
+# Aggregate subdomains
+# ex: example.com will match www.example.com, webmail.example.com and *example.com 
+# BUG: will also match also www.bad-example.com
+# env.aggregate true #change to false to disable aggregation 
+#
+# To report bugs, improvements or get updates
+# see http://github.com/joanpc/nginix_vhost_traffic
+#
+# inspired in postfix_filtered_awk 
+# Copyright (c) 2014, Joan Perez i Cauhe
+
+LOGDIR=${logdir:-/var/log/nginx}
+ACCESS_LOG=$LOGDIR/${logfile:-access.log}
+LOGTAIL=${logtail:-`which logtail`}
+STATEFILE=/var/lib/munin/plugin-state/nginx_vhost_traffic_multi.state
+VHOSTS=${vhosts:-`hostname`}
+AGGREGATE=${aggregate:true}
+
+BPARAM=${bparam:-11}
+IPARAM=${iparam:-10}
+
+case $1 in
+   config)
+   	DRAW=AREA
+	echo 'multigraph nginx_vhost_traffic_multi'
+	echo 'graph_title Nginx Virtual host traffic multi'
+	echo 'graph_vlabel bits / ${graph_period}'
+	echo 'graph_args --base 1000 -l 0'
+	echo 'graph_category Nginx'
+	echo 'graph_order recv sent'
+
+        echo recv.label Received
+        echo recv.type ABSOLUTE
+        echo recv.cdef recv,8,*
+	echo recv.graph no
+
+	echo sent.label 'Received (-) / Sent (+)'
+	echo sent.type ABSOLUTE
+	echo sent.cdef sent,8,*
+	echo sent.negative recv
+        
+	i=0
+        for vhost in $VHOSTS
+        do
+                i=$(($i + 1))
+               
+		echo multigraph nginx_vhost_traffic_multi.vhost_$i 
+	        echo 'graph_title Nginx Virtual' $vhost 'traffic'
+        	echo 'graph_vlabel bits out / ${graph_period}'
+        	echo 'graph_args --base 1000 -l 0'
+        	echo 'graph_category Nginx'
+		echo 'graph_order recv sent'
+	
+        	echo recv.label Received
+        	echo recv.type ABSOLUTE
+        	echo recv.cdef recv,8,*
+        	echo recv.graph no
+
+		echo sent.label 'Received (-) / Sent (+)'
+        	echo sent.type ABSOLUTE
+        	echo sent.cdef sent,8,*
+        	echo sent.negative recv
+		
+        done
+
+
+    exit 0;;
+esac
+
+export BPARAM
+export IPARAM
+export VHOSTS
+export AGGREGATE
+
+# Awk Script
+$LOGTAIL -f ${ACCESS_LOG} -o $STATEFILE | awk '
+
+BEGIN { 
+split(ENVIRON["VHOSTS"], hosts)
+for (host in hosts) { track[hosts[host]] = host}
+}        
+{
+		cn[$2]+=$ENVIRON["BPARAM"]
+		cni[$2]+=$ENVIRON["IPARAM"]
+		totali += $ENVIRON["IPARAM"]
+		totalo += $ENVIRON["BPARAM"]
+}
+END { 
+		for (host in cn) {		
+		if (match(ENVIRON["AGGREGATE"], "true")) {	
+			found = 0
+			for (vhost in track) {
+				if (index(host, vhost)) {
+				res[vhost] += cn[host]
+				resi[vhost] += cni[host]
+				found = 1
+				break
+				}
+			}
+			if (! found) {
+				rest+=cn[host]
+				resti+=cni[host]
+			}
+		} else {
+			if (host in track) {
+				res[host] += cn[host]
+				resi[host] += cni[host]
+			} else {
+				rest+=cn[host]
+				resti=cni[host]
+			}
+		}
+		}
+		#print "agregate: " ENVIRON["AGGREGATE"]
+
+		print "multigraph nginx_vhost_traffic_multi"
+		print "sent.value " totalo + 0
+		print "recv.value " totali + 0
+		for (vhost in track) {
+			print "multigraph nginx_vhost_traffic_multi.vhost_" track[vhost] 
+			print "sent.value " res[vhost]+0
+			print "recv.value " resi[vhost]+0
+		}
+}'
