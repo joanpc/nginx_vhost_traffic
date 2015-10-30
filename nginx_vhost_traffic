@@ -2,11 +2,11 @@
 #
 # Script for monitoring nginx Virtual host output traffic
 # 
-# Requierements: logtail awk
+# Requirements: logtail awk
 # one unique access log file with $bytes_sent value for more accuracy
 # check http://wiki.nginx.org/NginxHttpLogModule
 #
-# Configuration Options (all options have defauts)
+# Configuration Options (all options have defaults)
 # [nginx_vhost_traffic]
 #
 # Virtual host list
@@ -25,7 +25,7 @@
 # env.aggregate true #change to false to disable aggregation 
 #
 # To report bugs, improvements or get updates
-# see http://github.com/joanpc/nginix_vhost_traffic
+# see http://github.com/joanpc/nginx_vhost_traffic
 #
 # inspired in postfix_filtered_awk 
 # Copyright (c) 2010, Joan Perez i Cauhe
